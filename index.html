@@ -188,6 +188,12 @@
         // card info
         const cards = [
             {
+                type: 'start',
+                title: '🎂 回憶解鎖系統',
+                message: '由於今天是一個非常重要的日子。<br>在領取妳的專屬禮物前，必須先通過記憶力大考驗。<br>準備好了嗎？',
+                btnText: '接受挑戰 ➔'
+            },
+            {
                 type: 'choice',
                 question: '在 glamping 的時候，我們總共做了幾道菜？',
                 options: ['一道', '兩道', '三道', '四道'],
@@ -253,7 +259,13 @@
                 const card = cards[currentStep];
                 let html = '';
 
-                if (card.type === 'choice')
+                if (card.type === 'start')
+                {
+                    html = `<h1>${card.title}</h1>
+                            <p style="font-size: 16px; color: #555; line-height: 1.8; margin: 20px 0;">${card.message}</p>
+                            <button class="next-btn" style="display: block; margin-top: 30px;" onclick="nextStep()">${card.btnText}</button>`;
+                }
+                else if (card.type === 'choice')
                 {
                     html = `<h1>${card.question}</h1>`;
                     card.options.forEach((opt, idx) =>
