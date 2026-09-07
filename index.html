@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>給大廚的 29 歲生日禮物</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+        
+        body
+        {
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #faf8f5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            overflow-x: hidden;
+        }
+
+        .container
+        {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            max-width: 500px;
+            width: 90%;
+            transition: opacity 0.5s ease;
+            position: relative;
+        }
+
+        h1
+        {
+            color: #739072;
+            font-size: 22px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .option-btn
+        {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            background-color: #f4f4f4;
+            color: #333;
+            border: 2px solid transparent;
+            padding: 15px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .option-btn:hover
+        {
+            background-color: #e9e9e9;
+        }
+
+        .option-btn.correct
+        {
+            background-color: #739072;
+            color: white;
+        }
+
+        .error-text
+        {
+            color: #ff6b6b;
+            font-size: 14px;
+            margin-top: 5px;
+            min-height: 20px;
+            font-weight: bold;
+        }
+
+        .message-box
+        {
+            margin-top: 20px;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #555;
+            background: #fdfaf6;
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid #739072;
+            display: none;
+            text-align: left;
+        }
+
+        .next-btn
+        {
+            margin-top: 20px;
+            background-color: #739072;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            display: none;
+            width: 100%;
+        }
+
+        .reveal-msg
+        {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #555;
+            margin: 15px 0;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.8s ease;
+        }
+
+        .reveal-msg.visible
+        {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        input[type="text"]
+        {
+            width: 80%;
+            padding: 12px;
+            font-size: 20px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            outline: none;
+            text-align: center;
+            margin-top: 15px;
+            letter-spacing: 2px;
+        }
+
+        input[type="text"]:focus
+        {
+            border-color: #739072;
+        }
+
+        .video-wrapper
+        {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .video-wrapper iframe
+        {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        @keyframes shake
+        {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+        .shake
+        {
+            animation: shake 0.4s;
+            border-color: #ff6b6b !important;
+            background-color: #fff0f0 !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app-container">
+    </div>
+
+    <script>
+        // card info
+        const cards = [
+            {
+                type: 'choice',
+                question: '在 glamping 的時候，我們總共做了幾道菜？',
+                options: ['一道', '兩道', '三道', '四道'],
+                answerIndex: 1, // 兩道
+                errors: ['少了！', '', '有這麼多嗎？', '有這麼多嗎？'],
+                message: '青醬義大利麵和河南正宗新疆大盤雞！'
+            },
+            {
+                type: 'choice',
+                question: '我送妳的紙星星，總共包含幾種顏色？',
+                options: ['三種', '五種', '七種', '九種'],
+                answerIndex: 3, // 九種
+                errors: ['不對，去偷看一下', '不對，去偷看一下', '不對，去偷看一下', ''],
+                message: '從最底下的深綠色到最上面的淺黃色，代表我對妳的陪伴，從深沉踏實的底氣，一直到明亮溫暖的祝福。'
+            },
+            {
+                type: 'choice',
+                question: '以下哪個「不是」林豪擁有的優良品質？',
+                options: ['善良', '性格好', '愛乾淨', '笑起來很有感染力'],
+                answerIndex: 2, // 愛乾淨
+                errors: ['妳確定嗎…', '妳確定嗎…', '', '妳確定嗎…', ''],
+                message: '沒錯！除了愛乾淨，妳是集所有優良品質於一身！'
+            },
+            {
+                type: 'choice',
+                question: '請問我對妳好不好？',
+                options: ['超級好', '一般', '還行', '太差了'],
+                answerIndex: 0, // 超級好
+                errors: ['', '我要哭了…', '我要哭了…', '我要哭了…']
+            },
+            {
+                type: 'reveal',
+                question: '我為什麼對妳這麼好？',
+                messages: [
+                    '因為妳是一個很好的人',
+                    '雖然我已經說過很多遍了',
+                    '但還是要再次重申',
+                    '無論妳身邊的人怎麼看妳、評價妳、對待妳',
+                    '在我這，妳就是一個很好的人，所以妳值得我所有的好。'
+                ]
+            },
+            {
+                type: 'password',
+                question: '🔒 最終解鎖',
+                hint: '請輸入通關密碼（提示：結合第一題與第二題的答案）'
+            },
+            {
+                type: 'video',
+                title: '🎉 29 歲生日快樂！',
+                message: '在更棒的回憶出現之前，希望你不會忘記我們在 glamping 的那幾天。'
+            }
+        ];
+
+        let currentStep = 0;
+        const app = document.getElementById('app-container');
+
+        function renderStep()
+        {
+            app.style.opacity = 0; // fade out effect
+            
+            setTimeout(() =>
+            {
+                const card = cards[currentStep];
+                let html = '';
+
+                if (card.type === 'choice')
+                {
+                    html = `<h1>${card.question}</h1>`;
+                    card.options.forEach((opt, idx) =>
+                    {
+                        html += `<button class="option-btn" onclick="checkAnswer(${idx})">${opt}</button>`;
+                    });
+                    html += `<div id="error-msg" class="error-text"></div>`;
+                    if (card.message)
+                    {
+                        html += `<div id="success-msg" class="message-box">${card.message}</div>`;
+                    }
+                    html += `<button id="next-btn" class="next-btn" onclick="nextStep()">繼續 ➔</button>`;
+                } 
+                else if (card.type === 'reveal')
+                {
+                    html = `<h1>${card.question}</h1><div style="text-align: left; padding: 10px;">`;
+                    card.messages.forEach((msg, idx) =>
+                    {
+                        html += `<div class="reveal-msg" id="msg-${idx}">${msg}</div>`;
+                    });
+                    html += `</div><button id="next-btn" class="next-btn" onclick="nextStep()">繼續解鎖 ➔</button>`;
+                }
+                else if (card.type === 'password')
+                {
+                    html = `<h1>${card.question}</h1>
+                            <p style="color: #666; font-size: 15px;">${card.hint}</p>
+                            <input type="text" id="pwd-input" autocomplete="off" placeholder="輸入數字">
+                            <div id="pwd-error" class="error-text" style="margin-top: 15px;"></div>
+                            <button class="next-btn" style="display: block;" onclick="checkPassword()">解鎖禮物</button>`;
+                }
+                else if (card.type === 'video')
+                {
+                    html = `<h1>${card.title}</h1>
+                            <div class="video-wrapper">
+                                <iframe src="https://youtu.be/au3X5EEAi4I" allowfullscreen></iframe>
+                            </div>
+                            <div class="message-box" style="display: block; text-align: center; margin-top: 20px; border-left: none;">${card.message}</div>`;
+                }
+
+                app.innerHTML = html;
+                app.style.opacity = 1; // fade in effect
+
+                // reveal question => fade in line by line
+                if (card.type === 'reveal')
+                {
+                    let msgIndex = 0;
+                    const revealInterval = setInterval(() =>
+                    {
+                        if (msgIndex < card.messages.length)
+                        {
+                            document.getElementById(`msg-${msgIndex}`).classList.add('visible');
+                            msgIndex++;
+                        } 
+                        else
+                        {
+                            clearInterval(revealInterval);
+                            setTimeout(() =>
+                            {
+                                document.getElementById('next-btn').style.display = 'block';
+                            }, 500);
+                        }
+                    }, 3500); // fade in one line every 3.5 sec
+                }
+
+                if (card.type === 'password')
+                {
+                    document.getElementById('pwd-input').addEventListener('keypress', function(e)
+                    {
+                        if (e.key === 'Enter') checkPassword();
+                    });
+                }
+            }, 300);
+        }
+
+        // check answers to choice questions
+        function checkAnswer(selectedIndex)
+        {
+            const card = cards[currentStep];
+            const btns = document.querySelectorAll('.option-btn');
+            const errorDiv = document.getElementById('error-msg');
+            const nextBtn = document.getElementById('next-btn');
+            const successMsg = document.getElementById('success-msg');
+
+            // block if answer correct
+            if (nextBtn.style.display === 'block') return;
+
+            if (selectedIndex === card.answerIndex)
+            {
+                btns[selectedIndex].classList.add('correct');
+                errorDiv.innerHTML = '';
+                
+                // block other buttons
+                btns.forEach(btn =>{ if(!btn.classList.contains('correct')) btn.style.opacity = '0.5'; });
+
+                if (successMsg)
+                {
+                    successMsg.style.display = 'block';
+                }
+                
+                if (card.message)
+                {
+                    nextBtn.style.display = 'block';
+                } 
+                else
+                {
+                    setTimeout(nextStep, 1000);
+                }
+            } 
+            else
+            {
+                btns[selectedIndex].classList.remove('shake');
+                void btns[selectedIndex].offsetWidth;
+                btns[selectedIndex].classList.add('shake');
+                errorDiv.innerHTML = card.errors[selectedIndex];
+            }
+        }
+
+        // check final password
+        function checkPassword()
+        {
+            const input = document.getElementById('pwd-input').value.trim();
+            const errorDiv = document.getElementById('pwd-error');
+            
+            if (input === '29')
+            {
+                errorDiv.innerHTML = '';
+                fireConfetti();
+                nextStep();
+            } 
+            else
+            {
+                errorDiv.innerHTML = '密碼錯誤，提示：妳今天過的是幾歲生日？';
+                const inputField = document.getElementById('pwd-input');
+                inputField.classList.remove('shake');
+                void inputField.offsetWidth;
+                inputField.classList.add('shake');
+            }
+        }
+
+        function fireConfetti()
+        {
+            const duration = 4000;
+            const end = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+
+            const interval = setInterval(function()
+            {
+                const timeLeft = end - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+                const particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+
+        function nextStep()
+        {
+            if (currentStep < cards.length - 1)
+            {
+                currentStep++;
+                renderStep();
+            }
+        }
+
+        window.onload = renderStep;
+    </script>
+</body>
+</html>
